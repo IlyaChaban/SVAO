@@ -126,14 +126,14 @@ if __name__ == "__main__":
     ax[1, 2].title.set_text('Resize' )
     ax[1, 2].axis('off')
     
-    ax[2, 0].imshow(image.rotate(60,0))
+    ax[2, 0].imshow(image.rotate(60,1))
     ax[2, 0].title.set_text('Rotate' )
     ax[2, 0].axis('off')
     
-    ax[2, 1].hist(image.histogram())
+    print(image.histogram()[0])
+    ax[2, 1].stairs(image.histogram()[0], fill=True)
     ax[2, 1].title.set_text('Histogram' )
-    ax[2, 1].axis('off')
-    
+        
     image_shape= np.asarray(image.shape)
     ax[2, 2].text(0, 0, ''.join(str(image.shape)),fontsize=12)
     ax[2, 2].title.set_text('Shape' )
