@@ -38,27 +38,33 @@ def transform_by_lut(img, x_low, x_high):
         transformed image
     """
     imgcopy = img.copy()
-    imgcopy[imgcopy < x_low] = 0
-    imgcopy[imgcopy > x_high] = 1
-
+    
     for i in range(np.shape(imgcopy)[0]):
         for j in range(np.shape(imgcopy)[1]):
+        
             if (imgcopy[i, j] != 0) and (imgcopy[i, j] != 1):
-                imgcopy[i, j] = 1 / (x_high - x_low) * (imgcopy[i, j] - x_low)
-
+                imgcopy[i, j] = (1 / (x_high - x_low)) * (imgcopy[i, j] - x_low)
+                
+            elif imgcopy[i, j] < x_low:
+                imgcopy[i, j] = 0.
+                
+            elif imgcopy[i, j] > x_high:
+                imgcopy[i, j] = 1.
     return imgcopy
 
 
 # Don't change this code, you can change P_LOW and P_HIGH of course
-img = cv.imread(os.path.join("data", "P.jpg"))
-grayscaled = cv.cvtColor(img, cv.COLOR_BGR2GRAY) / 255
-P_LOW = 0.01
-P_HIGH = 0.99
+img = cv.imread(os.path.join("data", "L.jpg"))
+grayscaled = cv.cvtColor(img, cv.COLOR_BGR2GRAY).astype(float) / 255
+grayscaled = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+P_LOW = 0.4
+P_HIGH = 0.9
 x_low, x_high = range_by_quantiles(grayscaled, P_LOW, P_HIGH)
-transformed = transform_by_lut(grayscaled, x_low, x_high)
-
+transformed = cv.equalizeHist(grayscaled)#transform_by_lut(grayscaled, x_low, x_high)
+print(transformed)
+print(x_low)
+print(x_high)
 # PLOT HISTOGRAMS HERE (CHECK IF IT IS CORRECT)
-
 plt.subplot(221)
 plt.imshow(img, cmap="gray")
 plt.title(("Source img"))

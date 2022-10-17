@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plts
+import matplotlib.pyplot as plt
 
 class ImageBGR:
 
@@ -10,8 +10,7 @@ class ImageBGR:
         elif image:
             self.__image = self.image  # load the image from ndarray -- your code here
         else:
-            raise AttributeError(
-                "There is no such file or it is not an array ")  # add your code for the case of the error
+            raise AttributeError("There is no such file or it is not an array ")  # add your code for the case of the error
 
     def gray(self) -> np.ndarray:
         """
@@ -101,7 +100,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(4, 3)
 
-    ax[0, 0].axis('off')
+    ax[0, 0].imshow(image.__image)
     ax[0, 0].title.set_text('Init')
 
     ax[0, 1].imshow(image.gray(), cmap='gray')
@@ -148,6 +147,3 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
-
-
-image.bgr()
