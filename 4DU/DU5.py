@@ -32,78 +32,56 @@ def bgr2rgb(bgr_image):
 def get_weights(Z, L):
     #function for calculation of weights as a penalty of a pixel value
     return np.interp(Z, [0, (L-1)/2, L-1], [0, 1, 0]).flatten() 
+    
+def estimate_exposure(Z, w):
 
-def estimate_exposure(Z, w, t, dim):
-    """
-    Estimate the chip cells exposure and exposure time from the pixels intensities.
+    t_ind, Z_ind = np.indices(Z.shape)
+    E_ind=Z_ind.flatten()
+    t_ind=t_ind.flatten()
+    Z = Z.astype('float32')
+    result__ = np.where(Z == 0)
+    
+    for i in range(len(result__[0])):
+        Z[result__[0][i]][result__[1][i]] = 0.000001
 
-    Assume taht the response function f is the identity.
+    b = np.log(Z.flatten())*np.sqrt(w)
 
-    Z(j,i) is the intensity of i-th pixel in j-th image
-    w - weights
-    """
-    w_sqrt=np.sqrt(w)
+    for i in range(Z.shape[0]):
+        
+        logE = csr_matrix((np.sqrt(get_weights(Z[i], 2**8)), (Z_ind[0], Z_ind[0])), shape=(Z.shape[1], Z.shape[1]))
+        logT = csr_matrix((np.sqrt(get_weights(Z[i], 2**8)), (Z_ind[0], np.full((Z_ind.shape[1], 1),i, dtype=int).flatten())), shape=(Z.shape[1], Z.shape[0]))
+        A_t = hstack((logE, logT))
+        if i == 0:
+            A = A_t
+        else:
+            A = vstack((A, A_t))
     
-    Z_flat=Z.flatten()
-    Z_log=np.log(Z_flat,where=(Z_flat!=0))
-    Z_w=Z_log*w_sqrt
-    pixels=dim[0]*dim[1]
-    N=pixels*3
-    P=len(t)
+    sol = lsqr(A, b)
     
-    first=1
-    for j in range(P):
-        row = np.array(list(range(N)))
-        col = np.array(list(range(N)))
-        data = np.array(w[j*N:N*(j+1)])
-        irra_matrix=csr_matrix((data, (row, col)), shape=(len(row),len(col)))
-        
-        row = np.array(list(range(N)))
-        col_cur = np.array(np.ones(N)*j)
-        data = np.array(w[j*N:N*(j+1)])
-        
-        if first == 1:
-            data = np.array(np.zeros(N))
-        column_matrix=csr_matrix((data, (row, col_cur)), shape=(len(row),len(col_cur)))
-        
-        select_ind = np.array(list(range(P)))
-        time_matrix=column_matrix.tocsr()[:,select_ind]
-        
-        combined=hstack([irra_matrix,time_matrix])
-        
-        if first == 1:
-            A_matrix = combined
-            first = 0
-            continue
-        
-        A_matrix=vstack([A_matrix,combined])
-        
-    A_csr_matrix=A_matrix.asformat("csr")
-    
-    sol = lsqr(A_csr_matrix, Z_w)
-    solution_array=sol[0]
-    
-    tj=np.exp(solution_array[3*pixels:3*pixels+len(t)])
-    Ei=np.exp(solution_array[:3*pixels])
-    Ei_shape=Ei.reshape(dim[1],dim[0],3,order='F')
+    return np.exp(sol[0][: np.max(E_ind)+1]), np.exp(sol[0][np.max(E_ind)+1:])
 
     return Ei_shape, tj
-if __name__ == "__main__":
 
-    dim, Z, t = read_images("./images/*.jpg")
+if __name__ == "__main__":
+    
+    dim, Z, t = read_images("./images/*.jpg",20)
+    
 
     L = np.max(Z) + 1
     w = get_weights(Z,L)
 
-    Ei_shape, tj = estimate_exposure(Z, w,t,dim)
-
-    b,g,r = cv2.split(Ei_shape)
-    pic = b*0.3+g*0.6+r*0.1
+    Ei_shape, tj = estimate_exposure(Z, w)
+    
+    hdr_img, times = estimate_exposure(Z,w)
+    hdr_img = np.reshape(hdr_img, (60*4, 80*4, 3))
+    hdr_img_rgb = bgr2rgb(hdr_img)
+    hdr_img.shape
     
     plt.subplot(1, 2, 1)
-    plt.imshow(pic.astype(np.uint16),cmap='rainbow')
+    plt.plot(tj)
     
     plt.subplot(1, 2, 2)
-    plt.plot(tj)
-
+    plt.imshow(hdr_img_rgb)
+    plt.title("HDR Image")
+    
     plt.show()
