@@ -284,4 +284,3 @@ if __name__ == "__main__":
         
     pLine = productionLine(nails)
     pLine.VisualizeResults()
-
