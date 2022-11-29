@@ -25,11 +25,11 @@ class productionLine:
             nails_img_gray[i] = cv2.cvtColor(nail_img_copy, cv2.COLOR_BGR2GRAY)
             _, nails_img_thresh[i] = cv2.threshold(nails_img_gray[i], 120, 255, cv2.THRESH_BINARY_INV)
             
-            nails_img_thresh[i] = cv2.dilate(nails_img_thresh[i], kernel, iterations=2)
+            nails_img_thresh[i] = cv2.dilate(nails_img_thresh[i], kernel, iterations=1)
             
             _, nails_img_thresh[i] = cv2.threshold(nails_img_thresh[i], 120, 255, cv2.THRESH_BINARY)
             
-            nails_img_thresh[i] = cv2.erode(nails_img_thresh[i], kernel, iterations=2)
+            nails_img_thresh[i] = cv2.erode(nails_img_thresh[i], kernel, iterations=1)
         
         # for i in range(len(nails_img_thresh)):
             # ax = plt.subplot(4,2,i+1)
@@ -224,7 +224,7 @@ class productionLine:
         
         for i in range(len(self.contours)):
             # drawing contours
-            cv2.drawContours(nails_img[i],self.contours[i], -1, (255, 0, 0),thickness = 2)
+            cv2.drawContours(nails_img[i],self.contours[i], -1, (255, 0, 0),thickness = 1)
             
             # drawing bBoxes in not empty
             if self.bBoxes[i][0][0] != None:
